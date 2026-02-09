@@ -44,3 +44,4 @@ readability-lxml
 playwright
 lxml
 urllib3
+dotenv
