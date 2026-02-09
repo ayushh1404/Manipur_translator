@@ -1,29 +1,33 @@
-# Backend core
 fastapi
 uvicorn[standard]
 python-multipart
 python-dotenv
 
-# AI / APIs
 openai
 google-generativeai
 sarvamai
 
-# Audio processing
 numpy
 scipy
 soundfile
-pillow
-
-# Networking
 requests
-urllib3
 certifi
+urllib3
 
-# Frontend
+pymongo
+pydantic
 streamlit
 
-# Optional document support (safe)
-PyPDF2
 pdfplumber
+PyPDF2
 python-docx
+pillow
+pytesseract
+
+beautifulsoup4
+newspaper3k
+trafilatura
+readability-lxml
+lxml
+
+playwright
