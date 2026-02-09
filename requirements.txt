@@ -26,22 +26,29 @@
 # # --- Pydantic (FastAPI v2 stack) ---
 # pydantic>=2.6,<3
 
+
 fastapi
 uvicorn
-pymongo
-certifi
 openai
-python-docx
+google-generative-ai 
+sarvamai
+numpy
+scipy
+soundfile 
+requests
+certifi
+pymongo
+pydantic
+streamlit
 pdfplumber
-pypdf2
+PyPDF2
+python-docx
 pillow
 pytesseract
-requests
 beautifulsoup4
 newspaper3k
 trafilatura
 readability-lxml
-playwright
+playwright 
 lxml
 urllib3
-dotenv
