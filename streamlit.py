@@ -79,27 +79,86 @@ st.markdown("""
         border-left: 5px solid #dc3545;
     }
     
-    /* Text section */
-    .text-section {
+    /* Text section boxes - Dynamic sizing */
+    .text-box {
         background: white;
         padding: 1.5rem;
-        border-radius: 10px;
-        margin: 1rem 0;
-        border-left: 4px solid #667eea;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        border-radius: 12px;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border: 2px solid #e0e0e0;
+        min-height: 100px;
+        max-height: 500px;
+        overflow-y: auto;
+        transition: all 0.3s ease;
     }
     
-    .section-title {
-        color: #667eea;
-        font-size: 1.3rem;
+    .text-box:hover {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        border-color: #667eea;
+    }
+    
+    .manipuri-box {
+        border-left: 5px solid #ff6b6b;
+        background: linear-gradient(to right, #fff5f5 0%, #ffffff 100%);
+    }
+    
+    .english-box {
+        border-left: 5px solid #667eea;
+        background: linear-gradient(to right, #f0f4ff 0%, #ffffff 100%);
+    }
+    
+    .section-label {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 0.4rem 1.2rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
         font-weight: 600;
         margin-bottom: 1rem;
+        letter-spacing: 0.5px;
     }
     
-    .transcript-text {
-        font-size: 1.1rem;
-        line-height: 1.8;
+    .manipuri-label {
+        background: #ff6b6b;
+    }
+    
+    .english-label {
+        background: #667eea;
+    }
+    
+    .text-content {
+        font-size: 1.15rem;
+        line-height: 1.9;
         color: #2c3e50;
+        padding: 0.5rem 0;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    }
+    
+    .manipuri-text {
+        font-family: 'Noto Sans Meetei Mayek', 'Arial Unicode MS', sans-serif;
+        direction: ltr;
+    }
+    
+    /* Scrollbar styling for text boxes */
+    .text-box::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .text-box::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .text-box::-webkit-scrollbar-thumb {
+        background: #667eea;
+        border-radius: 10px;
+    }
+    
+    .text-box::-webkit-scrollbar-thumb:hover {
+        background: #5568d3;
     }
     
     /* Threat indicator */
@@ -232,10 +291,9 @@ if uploaded_file is not None:
                     result = response.json()
                     
                     # Extract data
+                    manipur_text = result.get('manipur_text', '')
                     english_text = result.get('english_text', '')
                     threat_analysis = result.get('threat_analysis', {})
-                    audio_duration = result.get('audio_duration', 0)
-                    chunks_processed = result.get('chunks_processed', 1)
                     
                     is_threat = threat_analysis.get('threat', False)
                     threat_reason = threat_analysis.get('reason', '')
@@ -270,17 +328,46 @@ if uploaded_file is not None:
                         """, unsafe_allow_html=True)
                     
                     # ═══════════════════════════════════════════════
-                    # TRANSLATED TEXT
+                    # MANIPURI SCRIPT BOX
                     # ═══════════════════════════════════════════════
                     
-                    st.markdown("""
-                    <div class="text-section">
-                        <div class="section-title">📝 Translated Text (English)</div>
-                    """, unsafe_allow_html=True)
+                    if manipur_text:
+                        # Calculate dynamic height based on text length
+                        text_length = len(manipur_text)
+                        if text_length < 200:
+                            box_height = "auto"
+                        elif text_length < 500:
+                            box_height = "200px"
+                        else:
+                            box_height = "400px"
+                        
+                        st.markdown(f"""
+                        <div class="text-box manipuri-box" style="max-height: {box_height};">
+                            <span class="section-label manipuri-label">📜 Manipuri Script</span>
+                            <div class="text-content manipuri-text">{manipur_text}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                     
-                    st.markdown(f'<p class="transcript-text">{english_text}</p>', unsafe_allow_html=True)
+                    # ═══════════════════════════════════════════════
+                    # ENGLISH TRANSLATION BOX
+                    # ═══════════════════════════════════════════════
                     
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    if english_text:
+                        # Calculate dynamic height based on text length
+                        text_length = len(english_text)
+                        if text_length < 200:
+                            box_height = "auto"
+                        elif text_length < 500:
+                            box_height = "200px"
+                        else:
+                            box_height = "400px"
+                        
+                        st.markdown(f"""
+                        <div class="text-box english-box" style="max-height: {box_height};">
+                            <span class="section-label english-label">📝 English Translation</span>
+                            <div class="text-content">{english_text}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                     
                     # ═══════════════════════════════════════════════
                     # METADATA
@@ -289,30 +376,22 @@ if uploaded_file is not None:
                     st.markdown(f"""
                     <div class="metadata">
                         <div class="metadata-item">
-                            <div class="metadata-label">Audio Duration</div>
-                            <div class="metadata-value">{audio_duration:.1f}s</div>
-                        </div>
-                        <div class="metadata-item">
-                            <div class="metadata-label">Chunks Processed</div>
-                            <div class="metadata-value">{chunks_processed}</div>
-                        </div>
-                        <div class="metadata-item">
                             <div class="metadata-label">Threat Level</div>
                             <div class="metadata-value">{threat_severity.upper()}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-label">Manipuri Text Length</div>
+                            <div class="metadata-value">{len(manipur_text)}</div>
+                        </div>
+                        <div class="metadata-item">
+                            <div class="metadata-label">English Text Length</div>
+                            <div class="metadata-value">{len(english_text)}</div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
                     
                     # Success message
                     st.success("✅ Processing completed successfully!")
-                    
-                else:
-                    # Error from API
-                    error_data = response.json() if response.headers.get('content-type') == 'application/json' else {}
-                    error_msg = error_data.get('detail', 'Unknown error occurred')
-                    
-                    st.error(f"❌ Error: {error_msg}")
-                    st.json(error_data)
                     
             except requests.exceptions.Timeout:
                 st.error("⏱️ Request timeout. The audio file might be too long or the server is busy. Please try again.")
