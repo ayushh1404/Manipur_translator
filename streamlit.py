@@ -8,6 +8,9 @@ import requests
 import os
 from pathlib import Path
 import time
+import streamlit.components.v1 as components
+import html as html_lib
+import math
 
 # ═══════════════════════════════════════════════════════════════════
 # PAGE CONFIGURATION
@@ -224,6 +227,30 @@ st.markdown("""
         padding: 1rem;
         border-radius: 10px;
     }
+    
+    /* Remove gap between label box and code block */
+    .text-box {
+        margin-bottom: 0 !important;
+        border-bottom: none !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        min-height: unset !important;
+        padding-bottom: 0.5rem !important;
+    }
+    div[data-testid="stCode"] {
+        margin-top: 0 !important;
+    }
+    div[data-testid="stCode"] pre {
+        border-top-left-radius: 0 !important;
+        border-top-right-radius: 0 !important;
+        border-top: none !important;
+        font-size: 1.05rem !important;
+        line-height: 1.85 !important;
+        font-family: Arial, 'Segoe UI', sans-serif !important;
+        color: #2c3e50 !important;
+        white-space: pre-wrap !important;
+        word-wrap: break-word !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -234,6 +261,153 @@ st.markdown("""
 # Backend API URL - change this to your FastAPI server URL
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 ENDPOINT = f"{API_URL}/voice/manipuri-threat-check"
+
+
+
+
+def text_box(text, label, label_emoji, border_color, bg_gradient, label_bg):
+    """Renders a styled box with working copy button using components.html.
+    Height is calculated from text to eliminate empty space."""
+    safe = html_lib.escape(text)
+
+    # Calculate height: ~22px per line, ~95 chars per line at this font size
+    # Add 90px for header row + padding
+    chars_per_line = 95
+    lines = sum(math.ceil(max(len(p), 1) / chars_per_line)
+                for p in text.split('\n')) if text else 1
+    max_lines = 18  # cap = scroll kicks in after ~400px
+    capped    = min(lines, max_lines)
+    content_h = capped * 22
+    total_h   = content_h + 90          # header + padding
+    scrollable = 'auto' if lines > max_lines else 'hidden'
+
+    components.html(f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+      * {{ margin:0; padding:0; box-sizing:border-box; }}
+      body {{ background:transparent; overflow:hidden; }}
+      .box {{
+        background: linear-gradient(to right, {bg_gradient} 0%, #ffffff 100%);
+        border: 2px solid #e0e0e0;
+        border-left: 5px solid {border_color};
+        border-radius: 12px;
+        padding: 1rem 1.2rem 1rem 1.2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        height: {total_h}px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }}
+      .header {{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-shrink: 0;
+      }}
+      .label {{
+        background: {label_bg};
+        color: white;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        font-family: Arial, sans-serif;
+      }}
+      .copy-wrap {{ position: relative; }}
+      .cbtn {{
+        background: transparent;
+        border: 1.5px solid #ccc;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 28px; height: 28px;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+      }}
+      .cbtn:hover {{ opacity: 1; }}
+      .tip {{
+        display: none;
+        position: absolute;
+        top: 32px; right: 0;
+        background: #2c3e50;
+        color: white;
+        padding: 3px 9px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-family: Arial, sans-serif;
+        white-space: nowrap;
+        z-index: 999;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      }}
+      .body {{
+        font-size: 15px;
+        line-height: 1.75;
+        color: #2c3e50;
+        font-family: Arial, 'Segoe UI', sans-serif;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-y: {scrollable};
+        overflow-x: hidden;
+        flex: 1;
+      }}
+      .body::-webkit-scrollbar {{ width: 6px; }}
+      .body::-webkit-scrollbar-thumb {{ background:#ccc; border-radius:3px; }}
+    </style>
+    </head>
+    <body>
+    <div class="box">
+      <div class="header">
+        <span class="label">{label_emoji} {label}</span>
+        <div class="copy-wrap">
+          <button class="cbtn" id="btn"
+            onmouseover="document.getElementById('tip').style.display='block'"
+            onmouseout="document.getElementById('tip').style.display='none'"
+            onclick="doCopy()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#555">
+              <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1
+                       0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9
+                       2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+            </svg>
+          </button>
+          <div id="tip" class="tip">Copy</div>
+        </div>
+      </div>
+      <div class="body" id="txt">{safe}</div>
+    </div>
+    <script>
+    function doCopy() {{
+      var txt = document.getElementById('txt').innerText;
+      var tip = document.getElementById('tip');
+      // textarea fallback — works in all iframe contexts
+      var ta = document.createElement('textarea');
+      ta.value = txt;
+      ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      tip.style.display = 'block';
+      if (ok) {{
+        tip.innerText = 'Copied!';
+        tip.style.background = '#28a745';
+      }} else {{
+        tip.innerText = 'Failed';
+        tip.style.background = '#dc3545';
+      }}
+      setTimeout(function(){{
+        tip.style.display = 'none';
+        tip.innerText = 'Copy';
+        tip.style.background = '#2c3e50';
+      }}, 2000);
+    }}
+    </script>
+    </body>
+    </html>
+    """, height=total_h + 4, scrolling=False)
 
 # ═══════════════════════════════════════════════════════════════════
 # HEADER
@@ -341,12 +515,8 @@ if uploaded_file is not None:
                         else:
                             box_height = "400px"
                         
-                        st.markdown(f"""
-                        <div class="text-box manipuri-box" style="max-height: {box_height};">
-                            <span class="section-label manipuri-label">📜 Manipuri Script</span>
-                            <div class="text-content manipuri-text">{manipur_text}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        text_box(manipur_text, "Manipuri Script", "📜",
+                                 "#ff6b6b", "#fff5f5", "#ff6b6b")
                     
                     # ═══════════════════════════════════════════════
                     # ENGLISH TRANSLATION BOX
@@ -362,12 +532,8 @@ if uploaded_file is not None:
                         else:
                             box_height = "400px"
                         
-                        st.markdown(f"""
-                        <div class="text-box english-box" style="max-height: {box_height};">
-                            <span class="section-label english-label">📝 English Translation</span>
-                            <div class="text-content">{english_text}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        text_box(english_text, "English Translation", "📝",
+                                 "#667eea", "#f0f4ff", "#667eea")
                     
                     # ═══════════════════════════════════════════════
                     # METADATA
