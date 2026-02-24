@@ -606,13 +606,5 @@ with st.sidebar:
     except:
         st.error("🔴 Backend Offline")
 
-# ═══════════════════════════════════════════════════════════════════
-# FOOTER
-# ═══════════════════════════════════════════════════════════════════
 
-st.markdown("---")
-st.markdown("""
-<div style="text-align: center; color: #6c757d; padding: 1rem;">
-    <p>Powered by Sarvam AI • OpenAI • FastAPI • Streamlit</p>
-</div>
-""", unsafe_allow_html=True)
+
